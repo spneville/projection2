@@ -1,0 +1,7 @@
+geom_file=dimer.xyz
+
+vec_files=rnh_vec.dat,rcom_vec.dat
+
+hessian_file=control
+
+end-input
