@@ -1,16 +1,16 @@
-  module parsemod
+module parsemod
 
-    implicit none
+  implicit none
 
-    save
+  save
 
-    integer                              :: iline,inkw
-    integer, parameter                   :: maxkw=60
-    integer, dimension(maxkw)            :: ilkw
-    character(len=120), dimension(maxkw) :: keyword
-    logical(kind=4)                      :: lend
-
-  contains
+  integer                              :: iline,inkw
+  integer, parameter                   :: maxkw=60
+  integer, dimension(maxkw)            :: ilkw
+  character(len=120), dimension(maxkw) :: keyword
+  logical(kind=4)                      :: lend
+  
+contains
 
 !#######################################################################
 !
@@ -28,108 +28,108 @@
 !
 !#######################################################################
 
-    subroutine rdinp(unit)
+  subroutine rdinp(unit)
 
-      implicit none
+    implicit none
 
-      integer            :: unit,i,k,istart,iend
-      character(len=120) :: string,message
+    integer            :: unit,i,k,istart,iend
+    character(len=120) :: string,message
 
 !------------------------------------------------------------------------
 ! Initialise arrays
 !------------------------------------------------------------------------
-      keyword=''
-      ilkw=0
+    keyword=''
+    ilkw=0
 
-      lend=.false.
+    lend=.false.
 
 !------------------------------------------------------------------------
 ! Read the next line that is not blank and does not start with a comment
 !------------------------------------------------------------------------
-5     continue
-      read(unit,'(a)',end=200) string
+5   continue
+    read(unit,'(a)',end=200) string
     
-      ! Skip blank lines
-      if (string.eq.'') goto 5
+    ! Skip blank lines
+    if (string.eq.'') goto 5
     
-      ! Read to first keyword
-      iend=len_trim(string)
-      do i=1,iend
-         if (string(i:i).ne.''.and.string(i:i).ne.achar(9)) then
-            istart=i
-            exit
-         endif
-      enddo
+    ! Read to first keyword
+    iend=len_trim(string)
+    do i=1,iend
+       if (string(i:i).ne.''.and.string(i:i).ne.achar(9)) then
+          istart=i
+          exit
+       endif
+    enddo
 
-      ! Skip lines beginning with a comment
-      if (string(i:i).eq.'#') goto 5
+    ! Skip lines beginning with a comment
+    if (string(i:i).eq.'#') goto 5
 
-      ! If line is not blank and does not start with a comment, then
-      ! extract the keywords
-      inkw=0
-      k=0
-      do i=istart,iend
+    ! If line is not blank and does not start with a comment, then
+    ! extract the keywords
+    inkw=0
+    k=0
+    do i=istart,iend
 
-         ! Terminate program with an error message if the number of
-         ! keywords exceeds the maximum value
-         if (inkw.eq.maxkw) goto 100
+       ! Terminate program with an error message if the number of
+       ! keywords exceeds the maximum value
+       if (inkw.eq.maxkw) goto 100
 
-         ! Break if we have reached a comment
-         if (string(i:i).eq.'#') exit
+       ! Break if we have reached a comment
+       if (string(i:i).eq.'#') exit
 
-         ! If the current character is a delimiter other than a space
-         ! (=, ',', ], etc.) then read in as a separate keyword and
-         ! then go to the next keyword...
-         if (string(i:i).eq.'='&
-              .or.string(i:i).eq.','&
-              .or.string(i:i).eq.'('&
-              .or.string(i:i).eq.')'&
-              .or.string(i:i).eq.'['&
-              .or.string(i:i).eq.']'&
-              .or.string(i:i).eq.'{'&
-              .or.string(i:i).eq.'}') then
-            inkw=inkw+1
-            read(string(i:i),'(a1)') keyword(inkw)
-            k=0
+       ! If the current character is a delimiter other than a space
+       ! (=, ',', ], etc.) then read in as a separate keyword and
+       ! then go to the next keyword...
+       if (string(i:i).eq.'='&
+            .or.string(i:i).eq.','&
+            .or.string(i:i).eq.'('&
+            .or.string(i:i).eq.')'&
+            .or.string(i:i).eq.'['&
+            .or.string(i:i).eq.']'&
+            .or.string(i:i).eq.'{'&
+            .or.string(i:i).eq.'}') then
+          inkw=inkw+1
+          read(string(i:i),'(a1)') keyword(inkw)
+          k=0
 
-         ! ... otherwise keep adding to the current keyword...
-         else if (string(i:i).ne.' '.and.string(i:i).ne.achar(9)) then
-            k=k+1
-            if (k.eq.1) inkw=inkw+1
-            read(string(i:i),'(a1)') keyword(inkw)(k:k)
+       ! ... otherwise keep adding to the current keyword...
+       else if (string(i:i).ne.' '.and.string(i:i).ne.achar(9)) then
+          k=k+1
+          if (k.eq.1) inkw=inkw+1
+          read(string(i:i),'(a1)') keyword(inkw)(k:k)
+          
+       ! ... until a blank space or tab is reached, at which point
+       ! we move to the next keyword
+       else
+          k=0
+       endif
+       
+    enddo
 
-         ! ... until a blank space or tab is reached, at which point
-         ! we move to the next keyword
-         else
-            k=0
-         endif
+    ! Convert all keywords to lowercase
+    do i=1,inkw
+       call lowercase(keyword(i))
+    enddo
+    
+    ! Determine keyword lengths
+    do i=1,inkw
+       ilkw(i)=len_trim(keyword(i))
+    enddo
+    
+    return
 
-      enddo
+100 continue
+    write(string(1:),'(i4)') iline
+    k=len_trim(string)
+    message='Number of keywords on line'//string(1:k)//' exceeds maxkw'
+    write(6,'(/,2x,a)') trim(message)
+    stop
+    
+200 continue
+    lend=.true.
+    return
 
-      ! Convert all keywords to lowercase
-      do i=1,inkw
-         call lowercase(keyword(i))
-      enddo
-
-      ! Determine keyword lengths
-      do i=1,inkw
-         ilkw(i)=len_trim(keyword(i))
-      enddo
-
-      return
-
-100   continue
-      write(string(1:),'(i4)') iline
-      k=len_trim(string)
-      message='Number of keywords on line'//string(1:k)//' exceeds maxkw'
-      write(6,'(/,2x,a)') trim(message)
-      STOP
-
-200   continue
-      lend=.true.
-      return
-
-    end subroutine rdinp
+  end subroutine rdinp
 
 !#######################################################################
 ! 
@@ -137,25 +137,25 @@
 !              string with the corresponding lowercase letters
 !
 !#######################################################################
-    subroutine lowercase(string)
+  subroutine lowercase(string)
       
-      implicit none
+    implicit none
+    
+    integer*8    ::  i,j,length
+    character(*) :: string
       
-      integer*8    ::  i,j,length
-      character(*) :: string
+    length=len(string)
       
-      length=len(string)
-      
-      do i=1,length
-         do j=65,90
-            if (ichar(string(i:i)).eq.j) string(i:i)=char(j+32)
-         enddo
-      enddo
+    do i=1,length
+       do j=65,90
+          if (ichar(string(i:i)).eq.j) string(i:i)=char(j+32)
+       enddo
+    enddo
 
-      return
+    return
 
-    end subroutine lowercase
+  end subroutine lowercase
 
 !#######################################################################
 
-  end module parsemod
+end module parsemod

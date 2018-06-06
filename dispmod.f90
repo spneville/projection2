@@ -1,9 +1,9 @@
-  module dispmod
+module dispmod
 
-    save
+  save
+    
+  real*8, dimension(3) :: cut,cut2
+  character(len=60)    :: astem
+  logical              :: lcut2d
 
-    real*8, dimension(3) :: cut,cut2
-    character(len=60)    :: astem
-    logical              :: lcut2d
-
-  end module dispmod
+end module dispmod
