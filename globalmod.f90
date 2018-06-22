@@ -38,7 +38,7 @@ contains
 ! Read the data file
 !-----------------------------------------------------------------------
     ! Read the file header
-    write(unit) header
+    read(unit) header
 
     ! Read the system size and allocate arrays
     read(unit) ncoo

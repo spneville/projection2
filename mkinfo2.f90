@@ -414,7 +414,8 @@ contains
                
     nfound=0
 5   read(unit,'(a)',end=10) string
-    if (index(string,'DFTCI').ne.0) then
+    if (index(string,'DFTCI').ne.0 &
+         .and.index(string,'#').ne.0) then
        nfound=nfound+1
        if (nfound.gt.nsta) goto 10
        read(string,'(31x,F12.6)') energy(n,nfound)

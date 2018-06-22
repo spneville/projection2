@@ -1434,7 +1434,7 @@ contains
 !-----------------------------------------------------------------------
 ! File header
 !-----------------------------------------------------------------------
-    header='Projection 2 data file created using the input file: '//&
+    header='Projection2 data file created using the input file: '//&
          trim(ain)
     write(unit) header
     
