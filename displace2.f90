@@ -468,7 +468,7 @@ contains
 
     implicit none
 
-    integer                 :: i,j,k,unit1,unit2,iz1,iz2,nf
+    integer                 :: i,j,k,unit1,unit2,iz1,iz2,nf,i1,i2
     real*8                  :: dz1,dz2
     real*8, dimension(ncoo) :: z,x
     character(len=120)      :: aout
@@ -477,26 +477,27 @@ contains
     unit2=21
       
     z=0.0d0
-
     
     iz1=cutdiag(1)
     dz1=cutdiag(2)    
     iz2=cutdiag(3)
     dz2=cutdiag(4)
     nf=cutdiag(5)
-
+    
     open(unit1,file='all.xyz',form='formatted',status='unknown')
 
     do i=0,nf
-         
+
        ! Calculate the current Cartesian coordinates
        z(iz1)=i*dz1
        z(iz2)=i*dz2
        x=xcoo0+matmul(zcart,z)
-
+       
        ! Write the current file name
-       call filename2d(i,iz1,i,iz2,aout)
-
+       i1=int(sign(dble(i),dz1))
+       i2=int(sign(dble(i),dz2))
+       call filename2d(i1,iz1,i2,iz2,aout)
+       
        ! Write the current Cartesian coordinates to file
        open(unit2,file=aout,form='formatted',status='unknown')
        write(unit1,'(i3,/)') natm
@@ -548,7 +549,7 @@ contains
        write(aout(k:k+1),'(a2)') 'r_'
     endif
     k=k+2
-      
+    
     if (iz2.lt.10) then
        write(aout(k:k+2),'(a1,i1,a1)') '0',iz2,'_'
     else
