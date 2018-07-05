@@ -41,8 +41,11 @@ contains
     adat=''
     astem=''
     cut=-1.0d0
+    cut2=-1.0d0
+    cutdiag=-1.0d0
     lcut2d=.false.
-
+    lcutdiag=.false.
+    
 !-----------------------------------------------------------------------
 ! Read the name of the input file and open this file
 !-----------------------------------------------------------------------
@@ -144,6 +147,47 @@ contains
              goto 100
           endif
           
+       else if (keyword(i).eq.'cutdiag') then
+          lcutdiag=.true.
+          if (keyword(i+1).eq.'=') then
+             i=i+2
+             read(keyword(i),*) cutdiag(1)
+             if (keyword(i+1).eq.',') then
+                i=i+2
+                read(keyword(i),*) cutdiag(2)
+             else
+                write(6,'(/,2x,a,/)') 'The 1st no. point spacing has not &
+                     been given with the cutdiag keyword'
+                STOP
+             endif
+             if (keyword(i+1).eq.',') then
+                i=i+2
+                read(keyword(i),*) cutdiag(3)
+             else
+                write(6,'(/,2x,a,/)') 'The 2nd mode number has not &
+                     been given with the cutdiag keyword'
+                STOP
+             endif
+             if (keyword(i+1).eq.',') then
+                i=i+2
+                read(keyword(i),*) cutdiag(4)
+             else
+                write(6,'(/,2x,a,/)') 'The 2nd no. point spacing has not &
+                     been given with the cutdiag keyword'
+                STOP
+             endif
+             if (keyword(i+1).eq.',') then
+                i=i+2
+                read(keyword(i),*) cutdiag(5)
+             else
+                write(6,'(/,2x,a,/)') 'The no. points has not &
+                     been given with the cutdiag keyword'
+                STOP
+             endif
+          else
+             goto 100
+          endif
+          
        else if (keyword(i).eq.'data_file') then
           if (keyword(i+1).eq.'=') then
              i=i+2
@@ -191,8 +235,8 @@ contains
 !-----------------------------------------------------------------------
 ! Check that all required information has been given
 !-----------------------------------------------------------------------
-    if (cut(1).eq.-1.0d0) then
-       write(6,'(/,2x,a,/)') 'The cut keyword has not been given'
+    if (cut(1).eq.-1.0d0.and.cutdiag(1).eq.-1.0d0) then
+       write(6,'(/,2x,a,/)') 'No cut keywords have been given'
        STOP
     endif
 
@@ -259,6 +303,8 @@ contains
 
     if (lcut2d) then
        call cut2d
+    else if (lcutdiag) then
+       call cut2d_diag
     else
        call cut1d
     endif
@@ -314,7 +360,7 @@ contains
 
     enddo
 
-    close(unit2)
+    close(unit1)
 
     return
 
@@ -413,6 +459,62 @@ contains
 
   end subroutine cut2d
 
+!#######################################################################
+
+  subroutine cut2d_diag
+    
+    use globalmod
+    use dispmod
+
+    implicit none
+
+    integer                 :: i,j,k,unit1,unit2,iz1,iz2,nf
+    real*8                  :: dz1,dz2
+    real*8, dimension(ncoo) :: z,x
+    character(len=120)      :: aout
+      
+    unit1=20
+    unit2=21
+      
+    z=0.0d0
+
+    
+    iz1=cutdiag(1)
+    dz1=cutdiag(2)    
+    iz2=cutdiag(3)
+    dz2=cutdiag(4)
+    nf=cutdiag(5)
+
+    open(unit1,file='all.xyz',form='formatted',status='unknown')
+
+    do i=0,nf
+         
+       ! Calculate the current Cartesian coordinates
+       z(iz1)=i*dz1
+       z(iz2)=i*dz2
+       x=xcoo0+matmul(zcart,z)
+
+       ! Write the current file name
+       call filename2d(i,iz1,i,iz2,aout)
+
+       ! Write the current Cartesian coordinates to file
+       open(unit2,file=aout,form='formatted',status='unknown')
+       write(unit1,'(i3,/)') natm
+       write(unit2,'(i3,/)') natm
+       do j=1,natm
+          write(unit1,'(a2,3(2x,F10.7))') atlbl(j),(x(k),k=j*3-2,j*3)
+          write(unit2,'(a2,3(2x,F10.7))') atlbl(j),(x(k),k=j*3-2,j*3)
+       enddo
+       close(unit2)
+
+    enddo
+
+    close(unit1)
+    
+    return
+    
+  end subroutine cut2d_diag
+    
 !#######################################################################
 
   subroutine filename2d(i1,iz1,i2,iz2,aout)
